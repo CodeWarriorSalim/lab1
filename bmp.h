@@ -4,7 +4,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <vector>
-
+/* How many of the variables from below you use in your code? Like 3 or 4, 
+ * so maybe it would be good to store all variables (starting somewhere from
+ * the height) as one chunk of data. Try it*/
 #pragma pack(push, 1)
 struct BMPFileHeader {
 	uint16_t file_type = 0x4D42;          // File type always BM which is 0x4D42
@@ -47,10 +49,12 @@ struct BMP {
 	BMPFileHeader file_header;
 	BMPInfoHeader bmp_info_header;
 	BMPColorHeader bmp_color_header;
+	/* It would be better to create a struct for pixel, so it would be a vector of pixels */
 	std::vector<uint8_t> data;
 
 	BMP(const char *fname) { read(fname); }
-
+	/* Definitions of member functions should be in BMP.cpp file. This allows separate compilation,
+ 	 * so recompilation after changes in a single file is a lot faster. */
 	void read(const char *fname) {
 		std::ifstream inp{ fname, std::ios_base::binary };
 		if (inp) {
@@ -59,7 +63,7 @@ struct BMP {
 				throw std::runtime_error("Error! Unrecognized file format.");
 			}
 			inp.read((char *)&bmp_info_header, sizeof(bmp_info_header));
-
+			/* We are solving the problem for 24 bits per pixel. Remove logic for 32 bits */
 			// The BMPColorHeader is used only for transparent images
 			if (bmp_info_header.bit_count == 32)
 			{
@@ -106,7 +110,9 @@ struct BMP {
 
 			// Here we check if we need to take into account row padding
 			if (bmp_info_header.width % 4 == 0) {
-				inp.read((char *)data.data(), data.size());
+				/* Use only one type of cast: either a C style casts or C++ style.
+				 * C-style cast are more dangerous. */
+				inp.read((char *)data.data(), data.size()); 
 				file_header.file_size += static_cast<uint32_t>(data.size());
 			}
 			else {
@@ -164,6 +170,7 @@ struct BMP {
 	}
 
 	void applyGaussianFilter(BMP &bmp) {
+		/* Make kernel of arbitrary radius and make that radius a parameter */
 		// Gaussian kernel for a 5x5 filter
 		int kernel[5][5] = { { 1, 2, 4, 2, 1 },
 		{ 2, 4, 8, 4, 2 },
@@ -178,7 +185,7 @@ struct BMP {
 
 		std::vector<uint8_t> newData(width * height *
 			(bmp.bmp_info_header.bit_count / 8));
-
+		/* Too much nested loops. Split somehow: by function or somehow else */
 		// Apply the Gaussian filter
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x) {
@@ -360,5 +367,5 @@ private:
 		}
 	}
 };
-#pragma once
+#pragma once  // You already have that. Why there is more?
 #pragma once
