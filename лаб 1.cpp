@@ -1,10 +1,9 @@
-#include "stdafx.h"
 #include <iostream>
 #include <fstream>
 
 using namespace std;
 
-#pragma pack(push, 1)// ”станавливаем выравнивание по 1 байту
+#pragma pack(push, 1)// Setting the alignment to 1 byte
 struct BMPHeader {
 	char signature[2];
 	uint32_t fileSize;
@@ -23,7 +22,7 @@ struct BMPHeader {
 	uint32_t colorsUsed;
 	uint32_t importantColors;
 };
-#pragma pack(pop) // ¬осстанавливаем предыдущее выравнивание
+#pragma pack(pop) // Restoring the previous alignment
 
 int main() {
 	ifstream file("salim.bmp", ios::binary);
@@ -35,32 +34,32 @@ int main() {
 	BMPHeader header;
 	file.read(reinterpret_cast<char*>(&header), sizeof(BMPHeader));
 
-	// ѕровер€ем, что изображение €вл€етс€ 24-битным BMP
+	// Check that the image is a 24-bit BMP
 	if (header.bitsPerPixel != 24) {
 		cout << "Only 24-bit BMP images are supported." << endl;
 		return 1;
 	}
 
-	// ¬ычисл€ем количество пам€ти дл€ загрузки изображени€
+	// Calculating the amount of memory to load the image
 	int imageSize = header.width * header.height * (header.bitsPerPixel / 8);
 
-	// «агружаем изображение в пам€ть
+	// Loading the image into memory
 	char* imageData = new char[imageSize];
 	file.seekg(header.dataOffset, ios::beg);
 	file.read(imageData, imageSize);
 
-	// —оздаем новый заголовок дл€ повернутого изображени€
+	// Creating a new title for the rotated image
 	BMPHeader rotatedHeader = header;
 	rotatedHeader.width = header.height;
 	rotatedHeader.height = header.width;
 
-	// ¬ычисл€ем количество пам€ти дл€ повернутого изображени€
+	// Calculating the amount of memory for the rotated image
 	int rotatedImageSize = rotatedHeader.width * rotatedHeader.height * (rotatedHeader.bitsPerPixel / 8);
 
-	// —оздаем массив дл€ повернутого изображени€
+	// Creating an array for the rotated image
 	char* rotatedImageData = new char[rotatedImageSize];
 
-	// ѕоворачиваем изображение по часовой стрелке
+	// Rotate the image clockwise
 	for (int y = 0; y < header.height; y++) {
 		for (int x = 0; x < header.width; x++) {
 			int rotatedX = y;
@@ -80,7 +79,7 @@ int main() {
 	outputFile.write(reinterpret_cast<char*>(&rotatedHeader), sizeof(BMPHeader));
 	outputFile.write(rotatedImageData, rotatedImageSize);
 
-	// ѕоворачиваем изображение против часовой стрелке
+	// Rotate the image counterclockwise
 	for (int y = 0; y < header.height; y++) {
 		for (int x = 0; x < header.width; x++) {
 			int rotatedX = header.height - y - 1;
@@ -95,12 +94,12 @@ int main() {
 		}
 	}
 
-	// —охран€ем результат против часовой стрелке
+	// Saving the result counterclockwise
 	ofstream outputFile1("rotateImageCounterClockwise.bmp", ios::binary);
 	outputFile1.write(reinterpret_cast<char*>(&rotatedHeader), sizeof(BMPHeader));
 	outputFile1.write(rotatedImageData, rotatedImageSize);
 
-	// ќсвобождаем пам€ть
+	// Freeing up memory
 	delete[] imageData;
 	delete[] rotatedImageData;
 
