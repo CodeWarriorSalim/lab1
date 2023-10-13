@@ -74,7 +74,7 @@ int main() {
 		}
 	}
 
-	// Сохраняем результат по часовой стрелке
+	// Saving the result clockwise
 	ofstream outputFile("rotateImageClockwise.bmp", ios::binary);
 	outputFile.write(reinterpret_cast<char*>(&rotatedHeader), sizeof(BMPHeader));
 	outputFile.write(rotatedImageData, rotatedImageSize);
