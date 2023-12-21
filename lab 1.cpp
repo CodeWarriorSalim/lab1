@@ -23,6 +23,43 @@ struct BMPHeader {
 	uint32_t importantColors;
 };
 #pragma pack(pop) // Restoring the previous alignment
+// Function to apply a 3x3 Gaussian filter to an image
+void applyGaussianFilter(char* imageData, int width, int height) {
+    float kernel[3][3] = {
+        {1.0 / 16, 2.0 / 16, 1.0 / 16},
+        {2.0 / 16, 4.0 / 16, 2.0 / 16},
+        {1.0 / 16, 2.0 / 16, 1.0 / 16}
+    };
+
+    char* tempImageData = new char[width * height * 3];
+
+    // Apply the filter to each pixel in the image
+    for (int y = 1; y < height - 1; y++) {
+        for (int x = 1; x < width - 1; x++) {
+            for (int channel = 0; channel < 3; channel++) {
+                float sum = 0.0;
+
+                // Apply the convolution operation
+                for (int i = -1; i <= 1; i++) {
+                    for (int j = -1; j <= 1; j++) {
+                        int pixelX = x + i;
+                        int pixelY = y + j;
+                        int index = (pixelY * width + pixelX) * 3 + channel;
+
+                        sum += static_cast<float>(imageData[index]) * kernel[i + 1][j + 1];
+                    }
+                }
+
+                tempImageData[(y * width + x) * 3 + channel] = static_cast<char>(sum);
+            }
+        }
+    }
+
+    // Copy the filtered data back to the original image
+    memcpy(imageData, tempImageData, width * height * 3);
+
+    delete[] tempImageData;
+}
 
 int main() {
 	ifstream file("salim.bmp", ios::binary);
@@ -98,13 +135,25 @@ int main() {
 	ofstream outputFile1("rotateImageCounterClockwise.bmp", ios::binary);
 	outputFile1.write(reinterpret_cast<char*>(&rotatedHeader), sizeof(BMPHeader));
 	outputFile1.write(rotatedImageData, rotatedImageSize);
+	 // Apply Gaussian filter to the clockwise rotated image
+    applyGaussianFilter(rotatedImageData, rotatedHeader.width, rotatedHeader.height);
 
-	// Freeing up memory
-	delete[] imageData;
-	delete[] rotatedImageData;
+    // Saving the result clockwise with Gaussian filter
+    ofstream outputFile2("rotateImageClockwiseWithGaussianFilter.bmp", ios::binary);
+    outputFile2.write(reinterpret_cast<char*>(&rotatedHeader), sizeof(BMPHeader));
+    outputFile2.write(rotatedImageData, rotatedImageSize);
 
-	file.close();
-	outputFile.close();
+    // Freeing up memory
+    delete[] imageData;
+    delete[] rotatedImageData;
 
-	return 0;
+    file.close();
+    outputFile.close();
+    outputFile1.close();
+    outputFile2.close();
+
+
+    return 0;
+
+
 }
